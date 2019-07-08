@@ -1,12 +1,14 @@
 package br.com.outspoken.apiproject.controllers;
 
 import br.com.outspoken.apiproject.model.Documento;
-import br.com.outspoken.apiproject.repository.TesteRepository;
+import br.com.outspoken.apiproject.repository.DocumentoRepository;
+import br.com.outspoken.apiproject.service.DocumentoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.management.Query;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -17,11 +19,10 @@ import java.util.List;
 public class DocumentoController {
 
 	@Autowired
-	private TesteRepository testeRepository;
+	private DocumentoService documentoService;
 
 	@GetMapping(value = "/buscando")
 	ResponseEntity<LocalDateTime> testeMetodos() {
-
 		LocalDateTime agora = LocalDateTime.now();
 		//List<String> nomes = Arrays.asList("lazaro", "asd", "testando os métodos");
 		 return new ResponseEntity<>(agora, HttpStatus.OK);
@@ -29,52 +30,42 @@ public class DocumentoController {
 
 	@GetMapping(value = "/buscar")
 	ResponseEntity<List<Documento>> testandoMetodos() {
-
-		Documento capelelinTurismo = new Documento();
-
-		capelelinTurismo.setId(1234L);
-		capelelinTurismo.getData();
-		capelelinTurismo.setNome("Joao");
-		capelelinTurismo.setSalario(3400 * 3);
-		capelelinTurismo.setInformacoes("Esse documento pertence ao Devops Joao Junior");
-
-		Documento arquivoDeSalarios = new Documento();
-
-		arquivoDeSalarios.setId(567L);
-		arquivoDeSalarios.setNome("Mulambo");
-		arquivoDeSalarios.getData();
-		arquivoDeSalarios.setSalario(200 * 20);
-		arquivoDeSalarios.setInformacoes("SalariosdevOps");
-
-		Documento arquivoGerentes = new Documento();
-
-		arquivoGerentes.setId(789L);
-		arquivoGerentes.setNome("Gerente de projeto Fernando");
-		arquivoGerentes.getData();
-		arquivoGerentes.setSalario(3000 * 5);
-		arquivoGerentes.setInformacoes("Informacoes pertinente ao Gerente de projetos Fernando da silva sauro");
-
-		List<Documento> listaDeDocumentos = Arrays.asList(arquivoDeSalarios, arquivoGerentes, capelelinTurismo);
-
-		return new ResponseEntity<>(listaDeDocumentos, HttpStatus.OK);
+		return new ResponseEntity<>(documentoService.buscarTodos(), HttpStatus.OK);
 	}
-	
+
+	@GetMapping("/buscaentredatas")
+	private ResponseEntity buscaEntreDatas(@RequestParam String dataInicial, @RequestParam String dataFinal){
+		LocalDate dataInicialLocalDate = LocalDate.parse(dataInicial);
+		LocalDate dataFinalLocalDate = LocalDate.parse(dataFinal);
+		List<Documento> Teste = documentoService.listaPronta(dataInicialLocalDate,dataFinalLocalDate);
+		return new ResponseEntity(Teste,HttpStatus.OK);
+	}
+
 	@PostMapping(value = "/inserir")
 	public ResponseEntity salvarDocumento(@RequestBody Documento documento){
-		System.out.println(documento.getNome()+documento.getSalario());
-
-		testeRepository.save(documento);
-		return null;
+		boolean isDataFutura =  documentoService.validarDataDocumentoFutura(documento.getData());
+		if(isDataFutura){
+			documentoService.salvarDocumento(documento);
+			return new ResponseEntity(HttpStatus.OK);
+		}else {
+			return new ResponseEntity("Não é possível salvar o documento com a data futura",HttpStatus.BAD_REQUEST);
+		}
 	};
 
 	@PutMapping(value = "/editando")
-	public String testeMetodosPUT() {
-		return "Teste de troca";
+	public ResponseEntity<Documento> atualizandoDocumento(@RequestBody Documento documento) {
+		//documentoRepository.save(documento);
+		return new ResponseEntity(documento, HttpStatus.OK);
 	}
-	
-	@DeleteMapping(value = "/deletando")
-	public boolean testeMetodosDELETE() {
-		return true;
-		
+
+	@DeleteMapping(value = "/deletando/{id}")
+	public ResponseEntity deletarDocumento(@PathVariable Long id){
+		boolean isDocumentoExistente = documentoService.verificaDocumentoExistente(id);
+		if(isDocumentoExistente){
+			documentoService.deletarDocumento(id);
+			return  new ResponseEntity("Deletado com sucesso",HttpStatus.OK);
+		}else {
+			return  new ResponseEntity("Id não encontrado",HttpStatus.NOT_FOUND);
+		}
 	}
 }

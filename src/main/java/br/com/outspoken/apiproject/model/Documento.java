@@ -1,11 +1,7 @@
 package br.com.outspoken.apiproject.model;
 
 import javax.persistence.*;
-import java.time.LocalDateTime;
-import java.time.Month;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.Date;
+import java.time.*;
 
 @Entity
 public class Documento {
@@ -14,9 +10,14 @@ public class Documento {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long Id;
 
+    @Column
     private String nome;
-    private LocalDateTime data;
+    @Column
+    private LocalDate data;
+    @Column
     private float salario;
+    @Column
+    private String informacoes;
 
     public float getSalario() {
         return salario;
@@ -26,17 +27,11 @@ public class Documento {
         this.salario = salario;
     }
 
-    private String informacoes;
-
-
-
-
-    public LocalDateTime getData() {
-
-        return LocalDateTime.of(1998, Month.DECEMBER, 12, 12,07);
+    public LocalDate getData() {
+        return data;
     }
 
-    public void setData(LocalDateTime data) {
+    public void setData(LocalDate data){
         this.data = data;
     }
 
@@ -55,7 +50,6 @@ public class Documento {
     public void setNome(String nome) {
         this.nome = nome;
     }
-
 
     public Long getId() {
         return Id;
